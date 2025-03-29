@@ -32,7 +32,7 @@ class AEAD:
     def enc(self, ad:bytes, msg:bytes) -> bytes:
         '''
         Encryption.
-        Takes the associated datat and the message,
+        Takes the associated data and the message,
         encrypts the message and then adds integrity
         protection to everything.
         '''
@@ -56,12 +56,6 @@ class AEAD:
             len_ad_bytes \
         )
 
-        # print(f"ad: {ad}")
-        # print(f"iv: {iv}")
-        # print(f"ct: {ct}")
-        # print(f"len_ad_bytes: {len_ad_bytes}")
-        # print(f"tag: {tag}")
-
         return ad+iv+ct+len_ad_bytes+tag
 
     def dec(self, mybytes:bytes) -> tuple[bool, bytes]:
@@ -72,14 +66,12 @@ class AEAD:
         decrypts it and returns the associated
         data and the message.
 
-        If any of the checks fail, None is return.
+        For simplicity, there is is no error handling.
+        Error handling is the responsibility of the user.
         '''
 
         len_ad_bytes = mybytes[-2*N:-1*N]
-        try:
-            len_ad = int.from_bytes(len_ad_bytes, byteorder='big')*N
-        except ValueError:
-            return None
+        len_ad = int.from_bytes(len_ad_bytes, byteorder='big')*N
 
         ad, iv, ct, tag = ( \
             mybytes[:len_ad],
@@ -99,10 +91,7 @@ class AEAD:
             tag
         )
 
-        try:
-            msg = unpad(msg_padded, N)
-        except ValueError:
-            return None
+        msg = unpad(msg_padded, N)
 
         return (vrf, ad, msg)
 

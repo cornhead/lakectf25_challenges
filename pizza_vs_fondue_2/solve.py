@@ -9,7 +9,7 @@ from Crypto.Cipher import AES
 from aead import CBCMac
 
 URL = 'localhost'
-PORT = 8000
+PORT = 9001
 LOCAL = './main.py'
 
 if 'REMOTE' in os.environ:
@@ -88,14 +88,14 @@ if __name__ == '__main__':
     order_pt = pad(json.dumps({
         'name': 'Charlie',
         'order': 'A gigantic pizza with lots of pineapples',
-        'address': 'Some Random Street Name, No 45'
+        'address': 'Ada Lovelace Street, No 45'
     }).encode(),
     AES.block_size)
 
     order_pt_target = pad(json.dumps({
         'name': 'Charlie',
         'order': 'A gigantic pizza with lots of pineapples',
-        'address': 'Some Random Street Name, No 42'
+        'address': 'Ada Lovelace Street, No 42'
     }).encode(),
     AES.block_size)
 

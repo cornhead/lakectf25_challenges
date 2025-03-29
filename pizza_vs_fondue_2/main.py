@@ -1,4 +1,4 @@
-#!../venv/bin/python3
+#!/usr/bin/python3
 
 import random
 import os
@@ -11,13 +11,14 @@ from Crypto.Util.Padding import pad
 
 from aead import AEAD
 
+flag = os.getenv('FLAG', 'CTF{dummyflag}')
+
 class SecurePizzaDeliveryService:
     def __init__(self, key):
         self.key = key
 
-        # For collection of metadata.
-        # This doesn't violate user privacy
-        # as it's only meta-data
+        # For collection of user metadata.
+        # (Metadata is not so privacy sensitive, right?)
         self.metadata_storage = list()
 
     def order(self, order_ct:bytes):
@@ -42,7 +43,7 @@ class SecurePizzaDeliveryService:
         try:
             order = json.loads(order_pt.decode())
         except ValueError:
-            print('An Error occurred: We could not parse your request as JSON')
+            print('An Error occurred: We could not parse your order as JSON')
 
         if not all([keyword in order for keyword in ['name', 'order', 'address']]):
             print('Your order is incomplete. It must contain at least the fields "name", "order" and "address".')
@@ -53,8 +54,8 @@ class SecurePizzaDeliveryService:
 
         print("Thanks! Your secret order is being processed.")
 
-        if order['address'] == 'Some Random Street Name, No 42':
-            print(os.getenv('FLAG', 'CTF{dummyflag}'))
+        if order['address'] == 'Ada Lovelace Street, No 42':
+            print(flag)
 
 
 class Charlie:
@@ -65,7 +66,7 @@ class Charlie:
         order = json.dumps({
             'name': 'Charlie',
             'order': 'A gigantic pizza with lots of pineapples',
-            'address': 'Some Random Street Name, No 45',
+            'address': 'Ada Lovelace Street, No 45',
         })
 
 
