@@ -1,10 +1,12 @@
-#!../venv/bin/python3
+#!/usr/bin/python3
 
 import random
 import os
 import sys
 
 from HCom import HCom
+
+flag = os.getenv('FLAG', default='CTF{dummyflag}')
 
 class Alice:
     def __init__(self):
@@ -15,7 +17,7 @@ class Alice:
     def step0_greeting(self):
         print('Hi Bob, Alice speaking!')
         print('We still haven\'t decided on dinner yet. I want Pizza, you want Fondue.')
-        print('I suggest, we both toss a coin and take the XOR. The result determins dinner.')
+        print('I suggest, we both toss a coin and take the XOR.')
         print('False = Pizza')
         print('True = Fondue')
         print('')
@@ -23,11 +25,17 @@ class Alice:
 
     def step1_recv(self):
         while True:
-            C = input('[Commitment to "True" or "False" as hex-string]: ')
+            C_str = input('[Commitment to "True" or "False" as hex-string]: ')
+            if len(C_str) == 0:
+                print('Hello? Did you say something?')
+                continue
+
             try:
-                C = bytes.fromhex(C)
+                C = bytes.fromhex(C_str)
             except ValueError:
                 print('Sorry, I could not parse your input.')
+                continue
+
             break
 
         self.C = C
@@ -53,15 +61,15 @@ class Alice:
             break
 
         if not HCom.vrf(msg, r, self.C):
-            print('I can tell by your commitment that you\'re lying!')
-            print('I start to question whether I want to eat with you at all!')
+            print('I can tell that you\'re lying!')
+            print('I start to question whether I want to have dinner with you at all!')
             sys.exit(1)
 
         try:
             self.bobs_coin = Alice._str_to_bool(msg)
         except ValueError:
-            print('Bob, can you still hear me?! I think the connection is bad.')
-            print('I couldn\'t hear what you said. Why don\'t we just eat Pizza.')
+            print('I didn\'t get what you were saying. I thing the connection is bad.')
+            print('Why don\'t we just eat Pizza?')
             sys.exit(1)
 
     def step4_send(self):
@@ -84,7 +92,7 @@ class Alice:
 
         print('Lucky you! Apparently the coins were in your favor.')
         print('So we\'re going to eat Fondue, but I\'d much rather it this tasty flag:')
-        print(os.getenv('FLAG', default='CTF{dummyflag}'))
+        print(flag)
 
     def run(self):
         self.step0_greeting()
@@ -97,10 +105,11 @@ class Alice:
 
 
     def _str_to_bool(mystr:str):
-
         # For the user's convenience
         # we do case-insensitive matching
         # by comparing the lengths
+        # len("True") = 4
+        # len("False") = 5
 
         match len(mystr):
             case 4:

@@ -1,0 +1,7 @@
+services:
+  pizza_vs_fondue_1:
+    build: .
+    ports:
+      - 9001:1338
+    env_file: env
+    restart: unless-stopped

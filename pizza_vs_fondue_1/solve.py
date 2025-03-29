@@ -4,8 +4,8 @@ from Crypto.Util.number import bytes_to_long
 
 from HCom import HCom
 
-URL = ''
-PORT = 0
+URL = 'localhost'
+PORT = 9001
 LOCAL = './main.py'
 
 if 'REMOTE' in os.environ:
