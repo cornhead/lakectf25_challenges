@@ -1,5 +1,7 @@
 from sage.all import *
 
+from secrets import randbelow
+
 
 # ------------- General Parameters for Curve25519 -----------------
 # https://www.cl.cam.ac.uk/teaching/2122/Crypto/curve25519.pdf
@@ -26,7 +28,7 @@ g = [field(base), sqrt(field(base**3 + 486662 * base**2 + base))] # [x, y] coord
 # ------------ Find Point of Order 2 -----------------
 
 current_order = 0
-while current_order != 2*q:
+while current_order != 4*q:
     G = E.random_element()
     current_order = G.order()
     # print(current_order == q, current_order)
@@ -43,3 +45,30 @@ print(f'assert E.cardinality() == 8 * q')
 # print(f'base = 9')
 # print(f'g = [field(base), sqrt(field(base**3 + 486662 * base**2 + base))]')
 print(f'G = E([{G.xy()[0]}, {G.xy()[1]}])')
+
+# ------------------- Check if attack works ------------
+
+print('\n')
+
+x = randbelow(q)
+y = randbelow(q)
+
+K = x*y*G
+K_prime = q*K
+
+print(K)
+print(K_prime)
+print(K_prime.order())
+assert 5*K_prime == K_prime
+
+roots = E.torsion_polynomial(4).roots(multiplicities=True)
+print(roots)
+for r, m in roots:
+    try:
+        print(E.lift_x(r))
+
+        if r != 0:
+            for i in range(4):
+                print(i*E.lift_x(r))
+    except:
+        print('failed to lift x')
