@@ -5,7 +5,7 @@ import Curve25519
 
 def ec_point_to_dict(p):
     if p == Curve25519.zero:
-        return json.dumps({'iszero': True})
+        return {'iszero': True}
 
     px, py = p.xy()
     return {'iszero': False, 'coordinates': [int(px), int(py)]}

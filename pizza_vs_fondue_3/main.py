@@ -158,9 +158,7 @@ class FondueRestaurantWebsite:
             print("Failed to redeem voucher: Preimage incorrect")
             return
 
-        print('Here is your free fondue:')
-        print(flag)
-
+        self._send_msg('<Unknown User>', 'Here is your free fondue: ' + flag)
 
 
 
@@ -281,7 +279,7 @@ def main():
 
     bob.run()
 
-    # bob.redeem_voucher()
+    frw.redeem_voucher()
 
 if __name__ == '__main__':
     main()

@@ -18,15 +18,16 @@ class ECDHE():
         self.other_pubK = other_share
 
         if self.other_pubK == Curve25519.zero:
-            raise ValueError
+            raise ValueError("Got zero-element as key share")
 
     def derive_key(self, purpose:str):
         if self.other_pubK == None:
-            raise ValueError
+            raise ValueError("Other key share not set yet")
 
         sharedK = self.x * self.other_pubK
+        print(':sharedK:', sharedK)
 
-        sharedK_str = str(sharedK.xy()) + purpose
+        sharedK_str = str(sharedK) + purpose
 
         K = KDF(sharedK_str)
 

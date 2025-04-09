@@ -59,7 +59,7 @@ K_prime = q*K
 print(K)
 print(K_prime)
 print(K_prime.order())
-assert 5*K_prime == K_prime
+assert 4*K_prime == K_prime
 
 roots = E.torsion_polynomial(4).roots(multiplicities=True)
 print(roots)
