@@ -1,4 +1,7 @@
+#!/usr/bin/python3
+
 import os
+import sys
 import pwn
 import json
 from Crypto.Protocol.KDF import scrypt
@@ -7,8 +10,8 @@ from Crypto.Hash import SHA3_256
 from util import *
 import Curve25519
 
-URL = 'localhost'
-PORT = 9001
+URL = 'challs.polygl0ts.ch'
+PORT = 9052
 LOCAL = './main.py'
 
 if 'REMOTE' in os.environ:
@@ -24,6 +27,12 @@ multiply_by_factor = Curve25519.q
 
 def get_msg(consume_next_prompt=True):
     msg = p.recvline()
+
+    if b'Traceback' in msg:
+        print('Error:')
+        print(p.recvall().decode())
+        sys.exit(1)
+
     msg = b':'.join(msg.split(b':')[1:]).decode().strip().encode()
     if consume_next_prompt:
         prompt = p.recvuntil(b':')
@@ -43,20 +52,10 @@ def recv_double_elgamal_and_send(identifier):
     print(f'{identifier}_prime: ', msg_prime)
     send_msg(json.dumps(msg_prime).encode())
 
-    sharedK = p.recvline()
-    if b'Traceback' in sharedK:
-        print('Error:')
-        print(p.recvall().decode())
-    else:
-        print('sharedK: ', sharedK)
-
-
 def main():
 
     recv_double_elgamal_and_send('msg1')
     recv_double_elgamal_and_send('msg2')
-
-    # assert sharedK1 == sharedK2
 
     msg3 = get_msg()
     print('msg3', msg3)
@@ -107,7 +106,11 @@ def main():
     msg5 = get_msg()
     print(msg5)
     send_msg(msg5)
-    # Bob terminates happily
+
+    msg = p.recvline().decode().strip()
+    print(msg)
+    assert msg == 'Dorothea is happy.'
+    # Dorothea terminates happily
 
     msg5 = AES_GCM_dec(K, msg5)
     msg5 = json.loads(msg5.decode())

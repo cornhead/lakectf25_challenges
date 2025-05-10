@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+
 import os
 import sys
 
@@ -11,7 +12,9 @@ from ECDHE import *
 from ECElGamal import *
 from util import *
 
-flag = os.getenv('FLAG', 'CTF{dummyflag}')
+flag = os.getenv('FLAG', 'EPFL{dummyflag}')
+
+VOUCHER_MSG = b'This is a gift voucher for one free fondue... a foucher. To redeem, provide pre-image of: '
 
 class PKI(dict):
     def __init__(self):
@@ -112,7 +115,7 @@ class FondueRestaurantWebsite:
 
             break
 
-        msg = b'This is a gift voucher for one free fondue... a foucher. To redeem, provide pre-image of: ' + H_redemptioncode
+        msg = VOUCHER_MSG + H_redemptioncode
 
         mac = KMAC256.new(key=self.K_mac, mac_len=32)
         mac.update(msg)
@@ -136,7 +139,7 @@ class FondueRestaurantWebsite:
 
             break
 
-        if not msg_json['msg'].startswith('This is a gift voucher for one free fondue... a foucher. To redeem, provide pre-image of: '):
+        if not msg_json['msg'].startswith(VOUCHER_MSG.decode()):
             print('Failed to redeem voucher: Message has not the expected format')
             return
 
@@ -171,9 +174,9 @@ class FondueRestaurantWebsite:
 
 
 
-class Bob:
+class Dorothea:
     def __init__(self, server, PKI):
-        self.username = 'Bob'
+        self.username = 'Dorothea'
         self.server = server
         self.elgamal = ECElGamal()
         PKI.register(self.username, self.elgamal.pubK)
@@ -189,13 +192,13 @@ class Bob:
             try:
                 other_share_enc = ECElGamal.deserialize_ct(other_share_enc_str)
             except ValueError as e:
-                print('Bob couldn\'t parse server share: ' + str(e))
+                print('Dorothea couldn\'t parse server share: ' + str(e))
                 continue
 
             try:
                 other_share = self.elgamal.dec(other_share_enc)
             except Exception as e:
-                print('Bob cound\'t decrypt server share: ' + str(e))
+                print('Dorothea couldn\'t decrypt server share: ' + str(e))
                 continue
 
             break
@@ -219,7 +222,7 @@ class Bob:
             try:
                 msg = AES_GCM_dec(K, ct_str)
             except Exception as e:
-                print('Bob cound\'t decrypt server first encrypted message: ' + str(e))
+                print('Dorothea cound\'t decrypt server first encrypted message: ' + str(e))
                 continue
 
             break
@@ -240,18 +243,20 @@ class Bob:
             try:
                 msg = AES_GCM_dec(K, ct_str)
             except Exception as e:
-                print('Bob cound\'t decrypt server first encrypted message: ' + str(e))
+                print('Dorothea cound\'t decrypt server second encrypted message: ' + str(e))
                 continue
 
             try:
                 msg_json = json.loads(msg)
             except Exception as e:
-                print('Bob cound\'t parse voucher as JSON: ' + str(e))
+                print('Dorothea cound\'t parse voucher as JSON: ' + str(e))
                 continue
 
             break
 
         self.voucher = msg_json
+
+        print('Dorothea is happy.')
 
     # def redeem_voucher(self):
     #     msg = self.voucher
@@ -275,9 +280,9 @@ def main():
     pki = PKI()
 
     frw = FondueRestaurantWebsite(pki)
-    bob = Bob(frw, pki)
+    doro = Dorothea(frw, pki)
 
-    bob.run()
+    doro.run()
 
     frw.redeem_voucher()
 

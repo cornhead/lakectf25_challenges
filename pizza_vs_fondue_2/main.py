@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3 -u
 
 import random
 import os
@@ -11,7 +11,7 @@ from Crypto.Util.Padding import pad
 
 from aead import AEAD
 
-flag = os.getenv('FLAG', 'CTF{dummyflag}')
+flag = os.getenv('FLAG', 'EPFL{dummyflag}')
 
 class SecurePizzaDeliveryService:
     def __init__(self, key):

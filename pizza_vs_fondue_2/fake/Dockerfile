@@ -9,9 +9,9 @@ FROM pwn.red/jail@sha256:ee52ad5fd6cfed7fd8ea30b09792a6656045dd015f9bef4edbbfa2c
 
 COPY --from=base / /srv
 COPY --chmod=0755 main.py /srv/app/run
-COPY --chmod=0644 HCom.py /srv/app/HCom.py
+COPY --chmod=0644 aead.py /srv/app/aead.py
 
 ENV JAIL_TIME 120
 ENV JAIL_CONNS_PER_IP 5
 ENV JAIL_MEM 20M
-ENV JAIL_ENV_FLAG "EPFL{v4r1ab1e_l3ng1h_enc0d3d_r4nd0mn355}"
+ENV JAIL_ENV_FLAG "EPFL{fake_flag}"

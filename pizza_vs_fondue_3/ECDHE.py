@@ -25,7 +25,6 @@ class ECDHE():
             raise ValueError("Other key share not set yet")
 
         sharedK = self.x * self.other_pubK
-        print(':sharedK:', sharedK)
 
         sharedK_str = str(sharedK) + purpose
 

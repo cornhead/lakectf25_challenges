@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import os
 import pwn
 import json
@@ -8,8 +10,10 @@ from Crypto.Cipher import AES
 
 from aead import CBCMac
 
-URL = 'localhost'
-PORT = 9001
+# pwn.context.log_level = 'debug'
+
+URL = 'challs.polygl0ts.ch'
+PORT = 9051
 LOCAL = './main.py'
 
 if 'REMOTE' in os.environ:

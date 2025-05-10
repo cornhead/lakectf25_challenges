@@ -1,11 +1,13 @@
+#!/usr/bin/python3
+
 import os
 import pwn
 from Crypto.Util.number import bytes_to_long
 
 from HCom import HCom
 
-URL = 'localhost'
-PORT = 9001
+URL = 'challs.polygl0ts.ch'
+PORT = 9050
 LOCAL = './main.py'
 
 if 'REMOTE' in os.environ:

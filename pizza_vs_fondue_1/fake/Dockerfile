@@ -14,4 +14,4 @@ COPY --chmod=0644 HCom.py /srv/app/HCom.py
 ENV JAIL_TIME 120
 ENV JAIL_CONNS_PER_IP 5
 ENV JAIL_MEM 20M
-ENV JAIL_ENV_FLAG "EPFL{v4r1ab1e_l3ng1h_enc0d3d_r4nd0mn355}"
+ENV JAIL_ENV_FLAG "EPFL{fake_flag}"

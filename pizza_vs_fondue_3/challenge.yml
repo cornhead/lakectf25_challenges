@@ -2,13 +2,17 @@
 # other tools to install and deploy your challenge.
 
 # Required sections
-name: "Pizza vs. Fondue 2"
+name: "Pizza vs. Fondue 3"
 author: "cornhead"
 category: crypto
 description: |
-  You're in the role of Alice.
+  You're in the role of Bob.
 
-  So, Bob won and he is preparing the fondue at the moment. However, you overheard your neighbour Charlie saying he's ordering pizza tonight. Maybe you can intercept his order and redirect it to your place instead.
+  Last night, Alice managed to steal pizza from your neighbour, but tonight you really want fondue. Can you pull off a similar trick?
+
+  You heard that your local fondue restaurant is giving away gift vouchers for free fondue to recurring customers. Maybe you can \"borrow\" one.
+
+  Your solution does not need to have a 100% success rate.
 value: 100
 type: dynamic
 
@@ -37,7 +41,7 @@ host: null
 # Optional settings
 state: visible
 # connection_info is used to provide a link, hostname, or instructions on how to connect to a challenge
-connection_info: nc challs.polygl0ts.ch 9051
+connection_info: nc challs.polygl0ts.ch 9052
 
 # healthcheck is a tool/script used to check a challenge
 # If connection_info was provided to CTFd when the challenge was installed, it will be passed to the healthcheck script:
@@ -48,11 +52,15 @@ connection_info: nc challs.polygl0ts.ch 9051
 # Can be removed if unused
 # Accepts strings or dictionaries of CTFd API data
 flags:
-  - "EPFL{3ncryp1_and_m4c_wi1h_AES_k3y_reu5e_4nd_d3cryp1i0n_0r4cle}"
+  - "EPFL{Prim41ity_of_e11iptic_curv3_0rder_m4tter5}"
 
 files:
   - main.py
-  - aead.py
+  - Curve25519.py
+  - ECDHE.py
+  - ECElGamal.py
+  - util.py
+  - solve_template.py
   - fake/Dockerfile
   - compose.yaml
 

@@ -1,0 +1,5 @@
+services:
+  pizza_vs_fondue_3:
+    build: .
+    ports:
+      - 9052:5000

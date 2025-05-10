@@ -1,8 +1,17 @@
-FROM python:slim@sha256:f41a75c9cee9391c09e0139f7b49d4b1fbb119944ec740ecce4040626dc07bed
+# syntax=docker/dockerfile:latest
 
-RUN apt update && apt install socat -y && pip install pycryptodome
+FROM docker.io/python:slim@sha256:f41a75c9cee9391c09e0139f7b49d4b1fbb119944ec740ecce4040626dc07bed AS base
 
-COPY main.py /
-COPY aead.py /
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked \
+     pip install pycryptodome
 
-CMD socat TCP-LISTEN:1338,fork EXEC:"python3 /main.py"
+FROM pwn.red/jail@sha256:ee52ad5fd6cfed7fd8ea30b09792a6656045dd015f9bef4edbbfa2c6e672c28c
+
+COPY --from=base / /srv
+COPY --chmod=0755 main.py /srv/app/run
+COPY --chmod=0644 aead.py /srv/app/aead.py
+
+ENV JAIL_TIME 120
+ENV JAIL_CONNS_PER_IP 5
+ENV JAIL_MEM 20M
+ENV JAIL_ENV_FLAG "EPFL{3ncryp1_and_m4c_wi1h_AES_k3y_reu5e_4nd_d3cryp1i0n_0r4cle}"

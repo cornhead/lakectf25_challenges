@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3 -u
 
 import random
 import os
@@ -6,7 +6,7 @@ import sys
 
 from HCom import HCom
 
-flag = os.getenv('FLAG', default='CTF{dummyflag}')
+flag = os.getenv('FLAG', default='EPFL{dummyflag}')
 
 class Alice:
     def __init__(self):
