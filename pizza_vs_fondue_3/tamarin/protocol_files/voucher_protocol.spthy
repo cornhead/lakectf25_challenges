@@ -1,0 +1,298 @@
+theory voucher_protocol
+begin
+
+builtins: 
+    symmetric-encryption,
+    asymmetric-encryption,
+    hashing,
+    diffie-hellman
+
+functions:
+    KDF/1,
+    MAC/2 // (deterministic) MAC with canonical verification
+
+// ----- Public key infrastructure -----
+                   
+
+// We only consider honest participants.
+// Hence, we don't need the reveal rule.
+//rule Reveal:    
+//	[ !Ltk(A, ltk) ]    
+//	--[ Rev(A) ]->    
+//	[ Out(ltk) ]    
+
+
+
+
+// ----- Protocol Rules -----
+
+// S: Server, U: User
+// ---- Phase 1: Get Voucher ----
+// 1. S -> U: AEnc{g^x}pkU
+// 2. U -> S: AEnc{g^y}pkS
+//    K := (g^x)^y = (g^y)^x
+// 3. S -> U: SEnc{"send me your hash"}K
+// 4. U -> S: SEnc{h(token)}K
+//    voucher := <"some text", h(token)>
+// 5. S -> U: SEnc{ voucher, Mac{voucher}Kmac }
+// ---- Phase 2: Redeem Voucher ----
+// 6. U -> S: voucher, token
+
+rule Init:
+	[
+		Fr(id),
+        Fr(Kmac),
+        Fr(ltkS),
+        Fr(ltkU)
+	]
+	--[
+        Create_S($S, id),
+        Create_U($U, id),
+    ]->
+	[
+        St_S_1($S, id, ltkS, Kmac, pk(ltkU), $U),
+        St_U_1($U, id, ltkU, pk(ltkS), $S),
+        Out(pk(ltkU)),
+        Out(pk(ltkS)),
+    ]
+
+/* rule Init_U: */
+/* 	[ */
+/* 		Fr(id), */
+/* 		!Ltk(S, ltkS), */
+/* 		!Ltk(U, ltkU) */
+/* 	] */
+/* 	--[ */
+/*         Create_U(U, id), */
+/*         OnlyOnce('User') */
+/*     ]-> */
+/* 	[] */
+
+
+rule S_1_send:
+	let mS1 = aenc{'g'^x}pkltkU
+	in
+	[
+		St_S_1(S, id, ltkS, Kmac, pkltkU, U),
+		Fr(x)
+	]
+	--[ Send(S, mS1), ]->
+	[
+		St_S_2(S, id, ltkS, Kmac, pkltkU, U, x),
+		Out(mS1)
+	]
+
+rule U_1_receive:
+	let
+        mU1 = g_x_enc
+        g_x = adec{g_x_enc}ltkU
+	in
+	[
+		St_U_1(U, id, ltkU, pkltkS, S),
+		In(mU1)
+	]
+	--[
+        Recv(U, mU1),
+        _restrict( not (g_x = DH_neutral ) )
+    ]->
+	[ St_U_2(U, id, ltkU, pkltkS, S, g_x) ]
+
+rule U_2_send:
+	let
+        mU2 = aenc{'g'^y}pkltkS
+        K = KDF(<g_x^y, 'encryption'>)
+	in
+	[
+        St_U_2(U, id, ltkU, pkltkS, S, g_x),
+        Fr(y)
+	]
+	--[
+        Send(U, mU2),
+    ]->
+	[
+        St_U_3(U, id, ltkU, pkltkS, S, K),
+        Out(mU2)
+    ]
+
+rule S_2_receive:
+	let
+        mS2 = g_y_enc
+        g_y = adec{g_y_enc}ltkS
+        K = KDF(<g_y^x, 'encryption'>)
+	in
+	[
+		St_S_2(S, id, ltkS, Kmac, pkltkU, U, x),
+        In(mS2)
+	]
+	--[ 
+        Recv(S, mS2),
+        _restrict( not (g_y = DH_neutral ) )
+    ]->
+	[
+		St_S_3(S, id, ltkS, Kmac, pkltkU, U, K),
+	]
+
+rule S_3_send:
+    let mS3 = senc{'sendmeyourtoken'}K
+    in
+    [
+		St_S_3(S, id, ltkS, Kmac, pkltkU, U, K)
+    ]
+    --[ Send(S, mS3)]->
+    [
+		St_S_4(S, id, ltkS, Kmac, pkltkU, U, K),
+        Out(mS3)
+    ]
+
+rule U_3_receive:
+    let mU3 = senc{'sendmeyourtoken'}K // check integrity
+    in
+    [
+        St_U_3(U, id, ltkU, pkltkS, S, K),
+        In(mU3)
+    ]
+    --[
+        Recv(U, mU3),
+        SharedKey(U, id, K)
+    ]->
+    [
+        St_U_4(U, id, ltkU, pkltkS, S, K),
+    ]
+
+rule U_4_send:
+    let mU4 = senc{<'hereismytoken', h(token)>}K
+    in
+    [
+        St_U_4(U, id, ltkU, pkltkS, S, K),
+        Fr(token)
+    ]
+    --[ Send(U, mU4) ]->
+    [
+        St_U_5(U, id, ltkU, pkltkS, S, K, token),
+        Out(mU4)
+    ]
+
+rule S_4_receive:
+    let
+        mS4 = senc{<'hereismytoken', H>}K
+    in
+    [
+		St_S_4(S, id, ltkS, Kmac, pkltkU, U, K),
+        In(mS4) 
+    ]
+    --[
+        Recv(S, mS4),
+        SharedKey(S, id, K)
+    ]->
+    [
+		St_S_5(S, id, ltkS, Kmac, pkltkU, U, K, H),
+    ]
+
+rule S_5_send:
+    let
+    msg = <'Voucher', H>
+    mS5 = senc{<msg, MAC{msg}Kmac>}K
+    in
+    [
+		St_S_5(S, id, ltkS, Kmac, pkltkU, U, K, H),
+    ]
+    --[ 
+        Send(S, mS5),
+        Finish_Phase1(S, U, id)
+    ]->
+    [
+		St_S_6(S, id, ltkS, Kmac), // forget any session-related state
+        Out(mS5) 
+    ]
+
+rule U_5_receive:
+    let
+        mU5 = senc{voucher_with_tag}K
+    in
+    [
+        St_U_5(U, id, ltkU, pkltkS, S, K, token),
+        In(mU5)
+    ]
+    --[
+        Recv(U, mU5),
+        Finish_Phase1(U, S, id)
+    ]->
+    [
+        St_U_6(U, id, ltkU, pkltkS, S, K, token, voucher_with_tag),
+    ]
+
+// --------- Phase 2 -------
+
+rule U_6_send:
+    let mU6 = <voucher_with_tag, token>
+    in
+    [
+        St_U_6(U, id, ltkU, pkltkS, S, K, token, voucher_with_tag),
+    ]
+    --[
+        Send(U, mU6),
+        Finish_Phase2(U, id, voucher_with_tag),
+        StartRedeemVoucher(U, S, id, voucher_with_tag)
+    ]->
+    [
+        St_U_7(U, id, ltkU, pkltkS, S, K, token, voucher_with_tag),
+        Out(mU6)
+    ]
+
+rule S_6_receive:
+    let
+    voucher = <'Voucher', h(token)> // verify that H = h(token) via pattern-matching
+    voucher_with_tag = <voucher, MAC{voucher}Kmac> // verify mac via pattern-matching
+    mS7 = <voucher_with_tag, token>
+    in
+    [
+		St_S_6(S, id, ltkS, Kmac), 
+        In(mS7)
+    ]
+    --[
+        Recv(S, mS7),
+        Finish_Phase2(S, id, voucher_with_tag),
+        FinishRedeemVoucher(S, id, voucher_with_tag)
+    ]->
+    [
+		St_S_7(S, id, ltkS, Kmac), 
+    ]
+
+
+/* restriction Inequality: */
+/*   "All x #i. Neq(x,x) @ #i ==> F" */
+
+/* restriction Equality: */
+/*   "All x y */ 
+
+/* restriction OnlyOnce: */
+/*   "All t #i #j. OnlyOnce(t)@#i & OnlyOnce(t)@#j ==> #i = #j" */
+
+lemma executable_phase1:
+  exists-trace
+    "Ex S U id #i #j. 
+	Finish_Phase1(S, U, id)@i & Finish_Phase1(U, S, id)@j & not (S = U)
+    & (All U1 U2 S1 S2 #i #j. Create_U(U1, S1)@#i & Create_U(U2, S2)@#j ==> #i=#j)
+    "
+
+lemma executable_phase2:
+  exists-trace
+    "Ex S U id voucher_with_tag#i #j. 
+	Finish_Phase2(U, id, voucher_with_tag)@i & Finish_Phase2(S, id, voucher_with_tag)@j & not (S = U)
+    & (All U1 U2 S1 S2 #i #j. Create_U(U1, S1)@#i & Create_U(U2, S2)@#j ==> #i=#j)
+    "
+lemma key_agreement:
+	"All S U K1 K2 id #i #j .
+		SharedKey(S, id, K1)@#i &
+        SharedKey(U, id, K2)@#j
+		==> K1 = K2
+	"
+
+lemma security:
+    "All S voucher_with_tag id #j .
+        FinishRedeemVoucher(S, id, voucher_with_tag)@#j
+        ==>
+        (Ex U #i. StartRedeemVoucher(U, S, id, voucher_with_tag)@#i)
+    "
+
+end
